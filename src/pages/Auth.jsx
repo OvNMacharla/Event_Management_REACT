@@ -6,6 +6,7 @@ import { CREATE } from '../QueryMutation/graphql-mutation';
 
 function AuthPage() {
     const [email, setEmail] = useState('');
+    const [loading, setLoading] = useState(false);
     const [password, setPassword] = useState('');
     const [isLogin, setIsLogin] = useState(true);
     const [error, setError] = useState('');
@@ -21,20 +22,24 @@ function AuthPage() {
             return;
         }
         try {
+            setLoading(true)
             if (isLogin) {
                 const { data } = await login({ variables: { email, password } });
                 console.log(data, "APOLLo")
                 const { token, userId } = data.login;
+                setLoading(false)
                 localStorage.setItem('authToken', token)
                 localStorage.setItem('userId', userId)
                 navigate('/events');
             }
             else {
+                setLoading(false)
                 const { data } = await create({ variables: { email, password } });
                 console.log('User created:', data);
             }
             setError('');
         } catch (error) {
+            setLoading(false)
             if (error.response) {
                 const message = error.response.data.errors[0]?.message || 'An error occurred.';
                 if (message.includes('User not found') || message.includes('Password incorrect')) {
@@ -75,6 +80,9 @@ function AuthPage() {
                     <div className="text-red-500 mb-2">
                         {error}
                     </div>
+                )}
+                {loading && (
+                    <div>Loading....</div>
                 )}
                 <button
                     onClick={handleSignIn}
